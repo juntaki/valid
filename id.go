@@ -14,7 +14,6 @@ type IDSource struct {
 	Checksum         bool
 	Sortable         bool
 	InitialTime      time.Time
-	Increment        uint16
 }
 
 func (s IDSource) checksumByteLength() int {
@@ -46,7 +45,7 @@ var DefaultSource = IDSource{
 	InitialTime:      time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 }
 
-func (s IDSource) Generate() (string, error) {
+func (s IDSource) Generate() string {
 	b := make([]byte, s.totalByteLength())
 
 	// Timestamp
@@ -77,7 +76,7 @@ func (s IDSource) Generate() (string, error) {
 		}
 	}
 
-	return wordSafeBase32.EncodeToString(b), nil
+	return wordSafeBase32.EncodeToString(b)
 }
 
 func (s IDSource) IsValid(id string) bool {
