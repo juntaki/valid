@@ -13,7 +13,6 @@ var wordSafeBase32 = base32.NewEncoding("23456789CFGHJMPQRVWXcfghjmpqrvwx").With
 type Source interface {
 	WithChecksum() Source
 	WithTimestamp() Source
-	WithTimestampStartAt(initialTime time.Time) Source
 	Generate() string
 	Timestamp(id string) time.Time
 	IsValid(id string) bool
@@ -36,12 +35,6 @@ func (s baseSource) WithTimestamp() Source {
 	return s
 }
 
-func (s baseSource) WithTimestampStartAt(initialTime time.Time) Source {
-	s.useTimestamp = true
-	s.initialTime = initialTime
-	return s
-}
-
 func NewSource(randomByteLength int) Source {
 	if randomByteLength < 1 {
 		panic("random byte length < 1")
@@ -50,7 +43,7 @@ func NewSource(randomByteLength int) Source {
 		randomByteLength: randomByteLength,
 		useChecksum:      false,
 		useTimestamp:     false,
-		initialTime:      time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+		initialTime:      time.Date(2021, 9, 4, 0, 0, 0, 0, time.UTC),
 	}
 }
 

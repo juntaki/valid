@@ -16,7 +16,7 @@ func NewMockSource(randomByteLength int) Source {
 		randomByteLength: randomByteLength,
 		useChecksum:      false,
 		useTimestamp:     false,
-		dummyTimestamp:   time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
+		dummyTimestamp:   time.Date(2021, 9, 4, 0, 0, 0, 0, time.UTC),
 	}
 }
 
@@ -27,12 +27,6 @@ func (m mockSource) WithChecksum() Source {
 
 func (m mockSource) WithTimestamp() Source {
 	m.useTimestamp = true
-	return m
-}
-
-func (m mockSource) WithTimestampStartAt(initialTime time.Time) Source {
-	m.useTimestamp = true
-	m.dummyTimestamp = initialTime
 	return m
 }
 
