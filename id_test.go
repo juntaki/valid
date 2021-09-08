@@ -1,17 +1,19 @@
-package valid
+package valid_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/juntaki/valid"
 )
 
-var ds = NewSource(16).WithTimestamp().WithChecksum()
+var ds = valid.NewSource(16).WithTimestamp().WithChecksum()
 
 func Test_generateID(t *testing.T) {
 	for i := 1; i < 100; i++ {
-		ds = NewSource(i).WithTimestamp().WithChecksum()
+		ds = valid.NewSource(i).WithTimestamp().WithChecksum()
 		got := ds.Generate()
-		if time.Now().Sub(ds.Timestamp(got)).Milliseconds() > 1 {
+		if time.Since(ds.Timestamp(got)).Milliseconds() > 1 {
 			t.Fatal("invalid")
 		}
 		if !ds.IsValid(got) {

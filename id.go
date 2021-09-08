@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
-	"fmt"
 	"time"
 )
 
@@ -21,23 +20,23 @@ type Source interface {
 
 type baseSource struct {
 	randomByteLength int
-	checksum         bool
-	timestamp        bool
+	useChecksum      bool
+	useTimestamp     bool
 	initialTime      time.Time
 }
 
 func (s baseSource) WithChecksum() Source {
-	s.checksum = true
+	s.useChecksum = true
 	return s
 }
 
 func (s baseSource) WithTimestamp() Source {
-	s.timestamp = true
+	s.useTimestamp = true
 	return s
 }
 
 func (s baseSource) WithTimestampStartAt(initialTime time.Time) Source {
-	s.timestamp = true
+	s.useTimestamp = true
 	s.initialTime = initialTime
 	return s
 }
@@ -48,18 +47,18 @@ func NewSource(randomByteLength int) Source {
 	}
 	return baseSource{
 		randomByteLength: randomByteLength,
-		checksum:         false,
-		timestamp:        false,
+		useChecksum:      false,
+		useTimestamp:     false,
 		initialTime:      time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC),
 	}
 }
 
 func (s baseSource) Generate() string {
 	b := make([]byte, s.byteLength())
-
 	cursor := 0
+
 	// Timestamp
-	if s.timestamp {
+	if s.useTimestamp {
 		// 40bit timestamp ~ Millisecond
 		ts := (time.Now().UnixNano() - s.initialTime.UnixNano()) >> 20 & ((1 << 40) - 1)
 
@@ -74,14 +73,14 @@ func (s baseSource) Generate() string {
 	// Random value
 	_, err := rand.Read(b[cursor : cursor+s.randomByteLength])
 	if err != nil {
-		panic(fmt.Errorf("failed to read random value"))
+		panic("failed to read random value")
 	}
-	cursor = cursor + s.randomByteLength
+	cursor += s.randomByteLength
 
-	// checksum
-	if s.checksum {
+	// Checksum
+	if s.useChecksum {
 		for _, bb := range b[:cursor] {
-			b[cursor] = b[cursor] ^ bb
+			b[cursor] ^= bb
 		}
 	}
 
@@ -89,7 +88,7 @@ func (s baseSource) Generate() string {
 }
 
 func (s baseSource) Timestamp(id string) time.Time {
-	if !s.timestamp {
+	if !s.useTimestamp {
 		return time.Time{}
 	}
 	b, err := wordSafeBase32.DecodeString(id)
@@ -108,20 +107,9 @@ func (s baseSource) Timestamp(id string) time.Time {
 	return time.Unix(0, s.initialTime.UnixNano()+int64(val))
 }
 
-func (s baseSource) byteLength() int {
-	bLen := s.randomByteLength
-	if s.timestamp {
-		bLen += 5
-	}
-	if s.checksum {
-		bLen += 1
-	}
-	return bLen
-}
-
 func (s baseSource) IsValid(id string) bool {
-	if !s.checksum {
-		return false // No checksum
+	if !s.useChecksum {
+		return false // No UseChecksum
 	}
 
 	b, err := wordSafeBase32.DecodeString(id)
@@ -135,8 +123,19 @@ func (s baseSource) IsValid(id string) bool {
 
 	var checksum byte
 	for _, bb := range b {
-		checksum = checksum ^ bb
+		checksum ^= bb
 	}
 
 	return checksum == byte(0)
+}
+
+func (s baseSource) byteLength() int {
+	l := s.randomByteLength
+	if s.useTimestamp {
+		l += 5
+	}
+	if s.useChecksum {
+		l++
+	}
+	return l
 }
