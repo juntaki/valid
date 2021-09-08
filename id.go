@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
+	"io"
 	"time"
 )
 
@@ -61,7 +62,6 @@ func (s baseSource) Generate() string {
 	if s.useTimestamp {
 		// 40bit timestamp ~ Millisecond
 		ts := (time.Now().UnixNano() - s.initialTime.UnixNano()) >> 20 & ((1 << 40) - 1)
-
 		b[0] = byte(ts >> 32)
 		b[1] = byte(ts >> 24)
 		b[2] = byte(ts >> 16)
@@ -71,7 +71,7 @@ func (s baseSource) Generate() string {
 	}
 
 	// Random value
-	_, err := rand.Read(b[cursor : cursor+s.randomByteLength])
+	_, err := io.ReadFull(rand.Reader, b[cursor:cursor+s.randomByteLength])
 	if err != nil {
 		panic("failed to read random value")
 	}

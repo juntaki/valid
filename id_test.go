@@ -1,13 +1,26 @@
 package valid_test
 
 import (
+	"crypto/rand"
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/oklog/ulid/v2"
+
+	"github.com/google/uuid"
 	"github.com/juntaki/valid"
+	"github.com/rs/xid"
 )
 
 var ds = valid.NewSource(16).WithTimestamp().WithChecksum()
+
+func Example() {
+	id := valid.Generate()
+
+	fmt.Println(id, len(id), valid.IsValid(id), valid.Timestamp(id))
+	// Output: 2X9P75FX2pJqCcHRVWV2862JW6XhFr6x 32 true 2021-09-08 23:59:17.339250688 +0900 JST
+}
 
 func Test_generateID(t *testing.T) {
 	for i := 1; i < 100; i++ {
@@ -30,17 +43,38 @@ func Test_validateID(t *testing.T) {
 	}
 }
 
-func Benchmark_generateID(b *testing.B) {
+func BenchmarkIsValid(b *testing.B) {
+	id := valid.Generate()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ds.Generate()
+		_ = valid.IsValid(id)
 	}
 }
 
-func Benchmark_validateID(b *testing.B) {
-	got := ds.Generate()
+func BenchmarkUUIDv4(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ds.IsValid(got)
+		_ = uuid.Must(uuid.NewRandom()).String()
+	}
+}
+
+func BenchmarkXID(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = xid.New().String()
+	}
+}
+
+func BenchmarkValidGenerate(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = valid.Generate()
+	}
+}
+
+func BenchmarkULID(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = ulid.MustNew(ulid.Timestamp(time.Now()), rand.Reader)
 	}
 }
