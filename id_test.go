@@ -9,7 +9,7 @@ import (
 
 var ds = valid.NewSource(16).WithTimestamp().WithChecksum()
 
-func Test_generateID(t *testing.T) {
+func TestCustomGenerate(t *testing.T) {
 	for i := 1; i < 100; i++ {
 		ds = valid.NewSource(i).WithTimestamp().WithChecksum()
 		got := ds.Generate()
@@ -23,10 +23,41 @@ func Test_generateID(t *testing.T) {
 	}
 }
 
-func Test_validateID(t *testing.T) {
+func TestCustomIsValid(t *testing.T) {
 	bad := "2X75jjvg2zzzGWq9JHjm88PHvR49gQX2FGqH6"
 	if ds.IsValid(bad) {
 		t.Fatal("invalid")
+	}
+}
+
+func TestGenerate(t *testing.T) {
+	for i := 1; i < 100; i++ {
+		got := valid.Generate()
+		if time.Since(valid.Timestamp(got)).Milliseconds() > 1 {
+			t.Fatal("invalid")
+		}
+		if !valid.IsValid(got) {
+			t.Fatal("invalid")
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+func TestMockGenerate(t *testing.T) {
+	mock := valid.NewMockSource(16)
+	ref := mock.Generate()
+	for i := 1; i < 100; i++ {
+		got := mock.Generate()
+		if ref != got {
+			t.Fatal("invalid")
+		}
+		if mock.Timestamp(got) != mock.Timestamp(ref) {
+			t.Fatal("invalid")
+		}
+		if !mock.IsValid(got) {
+			t.Fatal("invalid")
+		}
+		time.Sleep(time.Millisecond)
 	}
 }
 

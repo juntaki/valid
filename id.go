@@ -9,6 +9,11 @@ import (
 )
 
 var wordSafeBase32 = base32.NewEncoding("23456789CFGHJMPQRVWXcfghjmpqrvwx").WithPadding(base32.NoPadding)
+var referenceTime = time.Date(2021, 9, 4, 0, 0, 0, 0, time.UTC)
+
+func SetReferenceTime(t time.Time) {
+	referenceTime = t
+}
 
 type Source interface {
 	WithChecksum() Source
@@ -22,7 +27,6 @@ type baseSource struct {
 	randomByteLength int
 	useChecksum      bool
 	useTimestamp     bool
-	initialTime      time.Time
 }
 
 func (s baseSource) WithChecksum() Source {
@@ -43,7 +47,6 @@ func NewSource(randomByteLength int) Source {
 		randomByteLength: randomByteLength,
 		useChecksum:      false,
 		useTimestamp:     false,
-		initialTime:      time.Date(2021, 9, 4, 0, 0, 0, 0, time.UTC),
 	}
 }
 
@@ -54,7 +57,7 @@ func (s baseSource) Generate() string {
 	// Timestamp
 	if s.useTimestamp {
 		// 40bit timestamp ~ Millisecond
-		ts := (time.Now().UnixNano() - s.initialTime.UnixNano()) >> 20 & ((1 << 40) - 1)
+		ts := (time.Now().UnixNano() - referenceTime.UnixNano()) >> 20 & ((1 << 40) - 1)
 		b[0] = byte(ts >> 32)
 		b[1] = byte(ts >> 24)
 		b[2] = byte(ts >> 16)
@@ -97,7 +100,7 @@ func (s baseSource) Timestamp(id string) time.Time {
 	ts[7] = b[4]
 
 	val := binary.BigEndian.Uint64(ts) << 20
-	return time.Unix(0, s.initialTime.UnixNano()+int64(val))
+	return time.Unix(0, referenceTime.UnixNano()+int64(val))
 }
 
 func (s baseSource) IsValid(id string) bool {
