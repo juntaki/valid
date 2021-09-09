@@ -87,7 +87,11 @@ func (s baseSource) Timestamp(id string) time.Time {
 	if !s.useTimestamp {
 		return time.Time{}
 	}
-	b, err := wordSafeBase32.DecodeString(id)
+	if !s.IsValid(id) {
+		return time.Time{}
+	}
+
+	b, err := wordSafeBase32.DecodeString(id[:8])
 	if err != nil {
 		return time.Time{}
 	}
