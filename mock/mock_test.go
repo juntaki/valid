@@ -24,3 +24,11 @@ func TestMockGenerate(t *testing.T) {
 		time.Sleep(time.Millisecond)
 	}
 }
+
+func TestMockIsValid(t *testing.T) {
+	var ds = mock.NewMockSource(16)
+	id := ds.Generate()
+	if !ds.IsValid(id) {
+		t.Fatal("invalid")
+	}
+}
